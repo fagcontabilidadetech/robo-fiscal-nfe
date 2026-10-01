@@ -18,10 +18,18 @@ service cloud.firestore {
       allow create, update, delete: if ehAdmin();
     }
 
+    // Log de exclusões (quem apagou o quê): quem tem acesso à empresa pode registrar;
+    // só administrador lê, para não virar mais uma tela cheia de dados para todo mundo.
+    match /empresas/{emp}/logs/{id} {
+      allow create: if temAcesso(emp);
+      allow read, list: if ehAdmin();
+      allow update, delete: if false;
+    }
+
     // Dados separados por empresa: empresas/<id-da-empresa>/(notas|xmls|produtos)
     match /empresas/{emp}/{colecao}/{id} {
       allow read, create, update: if temAcesso(emp) && colecao in ['notas', 'xmls', 'produtos'];
-      allow delete: if ehAdmin() && colecao in ['notas', 'xmls', 'produtos'];
+      allow delete: if temAcesso(emp) && colecao in ['notas', 'xmls', 'produtos'];
     }
   }
 }

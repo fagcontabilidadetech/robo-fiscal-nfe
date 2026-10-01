@@ -183,6 +183,9 @@
       <button data-tela="analista">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         Analista</button>
+      <button data-tela="logs" id="menu-logs" class="oculto">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Logs de exclusão</button>
       <button data-tela="configuracoes" id="menu-config" class="oculto">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
         Configurações</button>
@@ -239,6 +242,12 @@
             <button id="btn-zip-arq" class="sec">Baixar todos os XML (.zip)</button>
             <button id="btn-pdf-arq" class="sec">PDF da página</button>
           </div>
+          <div class="barra">
+            <small>Só os últimos 3 meses carregam automaticamente. Para ver um mês mais antigo:</small>
+            <input type="month" id="arq-mes-buscar">
+            <button id="arq-buscar-mes" class="sec">Buscar mês antigo</button>
+            <small id="arq-busca-status" class="nota-ajuda"></small>
+          </div>
           <div id="arq-lista"></div>
           <div id="arq-paginacao" class="paginacao"></div>
         </div>
@@ -292,12 +301,19 @@
         </div>
       </section>
 
+      <section id="tela-logs" class="tela oculto">
+        <div class="titulo-tela"><h2>Logs de exclusão</h2><p>Registro de quem excluiu XMLs/notas desta empresa — só exclusões, para não virar um log cheio de tudo.</p></div>
+        <div class="cartao">
+          <div id="logs-tabela"></div>
+        </div>
+      </section>
+
       <section id="tela-configuracoes" class="tela oculto">
         <div class="titulo-tela"><h2>Configurações</h2><p>Usuários e permissões de acesso.</p></div>
         <div class="cartao">
           <div class="barra"><h3>Usuários</h3><button id="btn-novo-usuario">Novo usuário</button></div>
           <div id="usuarios-tabela"></div>
-          <p class="nota-ajuda" style="margin-top:12px"><b>Administrador:</b> acessa todas as empresas, exclui XMLs e gerencia usuários. <b>Usuário:</b> importa, revisa, gera XML/PDF e vê o dashboard das empresas liberadas.</p>
+          <p class="nota-ajuda" style="margin-top:12px"><b>Administrador:</b> acessa todas as empresas, gerencia usuários e vê os logs de exclusão. <b>Usuário:</b> importa, revisa, exclui XML, gera XML/PDF, usa o Analista e vê o dashboard das empresas liberadas.</p>
         </div>
       </section>
     </main>
