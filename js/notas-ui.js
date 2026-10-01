@@ -1,7 +1,7 @@
 // notas-ui.js — cartão de nota (caixa suspensa), edição na tela, ações e paginação.
 // Usado pela Conferência e pelos XML arquivados.
 import { getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "./firebase-init.js";
-import { CLASSIFICACOES, CST_ENTRADA, cfopEntradaSugerido, cstEntradaSugerido, chaveProduto } from "./regras.js";
+import { CST_ENTRADA, classificacoesDe, cfopEntradaSugerido, cstEntradaSugerido, chaveProduto } from "./regras.js";
 import { gerarXmlAjustado, gerarPdf, baixarArquivo, gerarZipXmls } from "./exportacao.js";
 import {
   estado, ehAdmin, docEmpresa, esc, moeda, formatarCnpj, competenciaDe, rotuloCompetencia, valorNota, ICONES,
@@ -15,7 +15,7 @@ const validadores = {
   cstCofins: (v) => CST_ENTRADA.includes(v),
 };
 const itemValido = (i) =>
-  CLASSIFICACOES.includes(i.classificacao) &&
+  classificacoesDe(estado.empresa.id).includes(i.classificacao) &&
   validadores.cfopEntrada(i.cfopEntrada) && validadores.cstPis(i.cstPis) && validadores.cstCofins(i.cstCofins);
 
 function selo(i) {
@@ -34,7 +34,7 @@ function htmlItem(i, idx) {
     <td>${esc(i.cfopOrigem)}</td>
     <td><select data-campo="classificacao">
       <option value="">— escolher —</option>
-      ${CLASSIFICACOES.map((c) => `<option ${c === i.classificacao ? "selected" : ""}>${c}</option>`).join("")}
+      ${classificacoesDe(estado.empresa.id).map((c) => `<option ${c === i.classificacao ? "selected" : ""}>${c}</option>`).join("")}
     </select></td>
     <td><input data-campo="cfopEntrada" maxlength="4" value="${esc(i.cfopEntrada)}" class="${inv("cfopEntrada")}"></td>
     <td><input data-campo="cstPis" list="lista-cst" maxlength="2" value="${esc(i.cstPis)}" class="${inv("cstPis")}"></td>

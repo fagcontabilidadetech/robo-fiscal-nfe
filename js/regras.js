@@ -5,6 +5,23 @@
 
 export const CLASSIFICACOES = ["industrialização", "comércio", "uso e consumo", "ativo imobilizado"];
 
+// Lista de classificações da Maestro (indústria) — igual à da Just Burger, mais as
+// categorias específicas dela (cesta básica, uniforme, combustível, energia elétrica).
+export const CLASSIFICACOES_MAESTRO = [
+  ...CLASSIFICACOES,
+  "cesta básica", "uniforme", "combustível c/ retenção", "combustível s/ retenção", "energia elétrica",
+];
+
+// Lista de classificações por empresa (pelo "id" de estado.js). Empresa sem entrada
+// aqui usa a lista padrão (CLASSIFICACOES).
+const CLASSIFICACOES_POR_EMPRESA = {
+  industria: CLASSIFICACOES_MAESTRO, // Maestro
+};
+
+export function classificacoesDe(empresaId) {
+  return CLASSIFICACOES_POR_EMPRESA[empresaId] || CLASSIFICACOES;
+}
+
 // CST de PIS/COFINS válidos para operações de ENTRADA (Tabela 4.3.4)
 export const CST_ENTRADA = [
   "50","51","52","53","54","55","56",
