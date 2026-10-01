@@ -12,14 +12,23 @@ export const estado = {
   usuario: null,       // usuário do Firebase Auth
   perfil: null,        // documento usuarios/<uid> (nome, papel, empresas, ativo)
   empresa: null,       // empresa escolhida no login
-  notas: [],           // todas as notas da empresa
+  notas: [],           // notas carregadas (últimos meses + as buscadas sob demanda nesta sessão)
   sessao: new Set(),   // ids importados nesta sessão (aparecem na Conferência)
+  competenciasCarregadas: new Set(), // meses antigos (fora da janela automática) já buscados do banco nesta sessão
 };
 
 export const ehAdmin = () => estado.perfil?.papel === "admin";
 export const rotuloPapel = (p) => (p === "admin" ? "Administrador" : "Usuário");
 export const colEmpresa = (nome) => collection(db, "empresas", estado.empresa.id, nome);
 export const docEmpresa = (nome, id) => doc(db, "empresas", estado.empresa.id, nome, id);
+export const novoDocEmpresa = (nome) => doc(colEmpresa(nome)); // novo documento com id automático (ex.: logs)
+
+// Data (AAAA-MM-DD) de N meses atrás — usada para limitar a carga automática de notas antigas.
+export const dataCorte = (mesesAtras) => {
+  const d = new Date();
+  d.setMonth(d.getMonth() - mesesAtras);
+  return d.toISOString().slice(0, 10);
+};
 
 export const $ = (id) => document.getElementById(id);
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>

@@ -1,7 +1,8 @@
 // arquivados.js — todas as notas da empresa, agrupadas por competência (mês/ano).
+import { getDocs, query, where, orderBy } from "./firebase-init.js";
 import { gerarPdf, gerarZipXmls } from "./exportacao.js";
 import { criarLista } from "./notas-ui.js";
-import { estado, $, esc, competenciaDe, rotuloCompetencia, formatarCnpj, unidadesDe, passaBusca } from "./estado.js";
+import { estado, colEmpresa, $, esc, competenciaDe, rotuloCompetencia, formatarCnpj, unidadesDe, passaBusca } from "./estado.js";
 
 let lista;
 
@@ -17,6 +18,30 @@ function textoVazio() {
   if (multiplasUnidades() && !$("arq-unidade").value) return "Selecione o CNPJ (unidade) acima para carregar as notas.";
   if (!$("arq-competencia").value) return "Selecione a competência acima para carregar as notas.";
   return "Nenhuma nota encontrada para este filtro.";
+}
+
+// Só os últimos meses (ver app.js) vêm carregados por padrão. Para ver um mês mais antigo,
+// busca-se sob demanda só para quem pediu, e só aquele mês — não a coleção inteira.
+async function carregarMesAntigo(comp) {
+  if (!comp || estado.competenciasCarregadas.has(comp)) return;
+  const status = $("arq-busca-status");
+  status.textContent = `Buscando notas de ${rotuloCompetencia(comp)}...`;
+  try {
+    const [ano, mes] = comp.split("-").map(Number);
+    const inicio = `${comp}-01`;
+    const fim = new Date(ano, mes, 1).toISOString().slice(0, 10); // 1º dia do mês seguinte
+    const snap = await getDocs(query(colEmpresa("notas"),
+      where("dataEmissao", ">=", inicio), where("dataEmissao", "<", fim), orderBy("dataEmissao")));
+    const existentes = new Set(estado.notas.map((n) => n.id));
+    const novas = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((n) => !existentes.has(n.id));
+    estado.notas.push(...novas);
+    estado.competenciasCarregadas.add(comp);
+    status.textContent = novas.length
+      ? `${novas.length} nota(s) de ${rotuloCompetencia(comp)} carregada(s).`
+      : `Nenhuma nota encontrada em ${rotuloCompetencia(comp)}.`;
+  } catch (err) {
+    status.textContent = "Não foi possível buscar: " + err.message;
+  }
 }
 
 export function iniciarArquivados() {
@@ -45,6 +70,19 @@ export function iniciarArquivados() {
   $("arq-competencia").addEventListener("change", () => lista.render(true));
   $("arq-status").addEventListener("change", () => lista.render(true));
   $("arq-unidade").addEventListener("change", () => lista.render(true));
+  $("arq-buscar-mes").addEventListener("click", async () => {
+    const valor = $("arq-mes-buscar").value; // "AAAA-MM" do <input type="month">
+    if (!valor) return;
+    const btn = $("arq-buscar-mes");
+    btn.disabled = true;
+    try {
+      await carregarMesAntigo(valor);
+      $("arq-competencia").value = valor;
+      renderArquivados(true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
   $("btn-pdf-arq").addEventListener("click", () => {
     const v = lista.visiveis();
     if (!v.length) return alert("Não há notas na página para gerar o PDF.");

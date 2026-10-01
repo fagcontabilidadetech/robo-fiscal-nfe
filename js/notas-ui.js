@@ -4,7 +4,7 @@ import { getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "./firebas
 import { CST_ENTRADA, classificacoesDe, cfopEntradaSugerido, cstEntradaSugerido, chaveProduto } from "./regras.js";
 import { gerarXmlAjustado, gerarPdf, baixarArquivo, gerarZipXmls } from "./exportacao.js";
 import {
-  estado, ehAdmin, docEmpresa, esc, moeda, formatarCnpj, competenciaDe, rotuloCompetencia, valorNota, ICONES,
+  estado, docEmpresa, novoDocEmpresa, esc, moeda, formatarCnpj, competenciaDe, rotuloCompetencia, valorNota, ICONES,
 } from "./estado.js";
 
 const POR_PAGINA = 20;
@@ -56,7 +56,7 @@ function htmlNota(n, abertas, selecionadas) {
         <button data-acao="salvar" class="btn-salvar ${n.sujo ? "destaque" : ""}">Salvar revisão</button>
         <button data-acao="xml">Gerar XML</button>
         <button data-acao="pdf" class="sec">PDF</button>
-        ${ehAdmin() ? `<button data-acao="excluir" class="icone perigo" title="Excluir XML" aria-label="Excluir XML">${ICONES.lixeira}</button>` : ""}
+        <button data-acao="excluir" class="icone perigo" title="Excluir XML" aria-label="Excluir XML">${ICONES.lixeira}</button>
       </span>
     </summary>
     <div class="tabela-itens">
@@ -128,9 +128,29 @@ async function gerarXml(nota) {
   baixarArquivo(xml, `${nota.chaveAcesso || nota.numero}-ajustado.xml`, "application/xml");
 }
 
+// Registra quem excluiu o quê (só exclusão, para não acumular log demais). Não trava a
+// exclusão em si se o registro falhar — é só uma auditoria, melhor-esforço.
+async function registrarExclusao(nota) {
+  try {
+    await setDoc(novoDocEmpresa("logs"), {
+      notaId: nota.id,
+      numero: nota.numero || "",
+      emitenteNome: nota.emitenteNome || "",
+      chaveAcesso: nota.chaveAcesso || "",
+      usuarioUid: estado.usuario?.uid || "",
+      usuarioNome: estado.perfil?.nome || "",
+      usuarioEmail: estado.usuario?.email || "",
+      quando: serverTimestamp(),
+    });
+  } catch (err) {
+    console.error("Não foi possível registrar o log de exclusão:", err);
+  }
+}
+
 async function excluirNota(nota) {
   if (!confirm(`Excluir a NF ${nota.numero} (${nota.emitenteNome})?\nO XML e a revisão serão apagados e não dá para desfazer.`)) return false;
   await Promise.all([deleteDoc(docEmpresa("notas", nota.id)), deleteDoc(docEmpresa("xmls", nota.id))]);
+  registrarExclusao(nota);
   estado.notas = estado.notas.filter((n) => n.id !== nota.id);
   estado.sessao.delete(nota.id);
   return true;
@@ -139,6 +159,7 @@ async function excluirNota(nota) {
 async function excluirNotas(notas) {
   if (!confirm(`Excluir ${notas.length} nota(s) selecionada(s)?\nO XML e a revisão de cada uma serão apagados e não dá para desfazer.`)) return false;
   await Promise.all(notas.flatMap((n) => [deleteDoc(docEmpresa("notas", n.id)), deleteDoc(docEmpresa("xmls", n.id))]));
+  notas.forEach(registrarExclusao);
   const idsExcluidos = new Set(notas.map((n) => n.id));
   estado.notas = estado.notas.filter((n) => !idsExcluidos.has(n.id));
   idsExcluidos.forEach((id) => estado.sessao.delete(id));
@@ -173,7 +194,7 @@ export function criarLista({
       <label><input type="checkbox" data-marcar-todas ${todasMarcadas ? "checked" : ""}> Selecionar todas desta página</label>
       <span class="nota-meta">${n} selecionada(s)</span>
       <button type="button" data-lote="zip" class="sec" ${n ? "" : "disabled"}>Baixar selecionadas (.zip)</button>
-      ${ehAdmin() ? `<button type="button" data-lote="excluir" class="perigo" ${n ? "" : "disabled"}>Excluir selecionadas</button>` : ""}
+      <button type="button" data-lote="excluir" class="perigo" ${n ? "" : "disabled"}>Excluir selecionadas</button>
     </div>`;
   }
 

@@ -1,14 +1,20 @@
 import {
   auth, db, signInWithEmailAndPassword, onAuthStateChanged, signOut,
-  doc, getDoc, getDocs, query, orderBy,
+  doc, getDoc, getDocs, query, where, orderBy,
 } from "./firebase-init.js";
-import { EMPRESAS, estado, ehAdmin, rotuloPapel, colEmpresa, $, esc } from "./estado.js";
+import { EMPRESAS, estado, ehAdmin, rotuloPapel, colEmpresa, dataCorte, $, esc } from "./estado.js";
 import { CST_ENTRADA } from "./regras.js";
 import { iniciarConferencia, renderConferencia } from "./conferencia.js";
 import { iniciarArquivados, renderArquivados } from "./arquivados.js";
 import { iniciarDashboard, renderDashboard } from "./dashboard.js";
 import { iniciarUsuarios, renderUsuarios } from "./usuarios.js";
 import { iniciarAnalista, renderAnalista } from "./analista.js";
+import { iniciarLogs, renderLogs } from "./logs.js";
+
+// Meses de histórico carregados automaticamente ao entrar na empresa. Período mais antigo
+// que isso só é buscado do banco quando a pessoa pede (ver "Buscar mês antigo" em Arquivados),
+// para não estourar a cota gratuita de leituras do Firestore conforme a base cresce.
+const MESES_HISTORICO_AUTOMATICO = 3;
 
 const VISOES = ["login-view", "sem-acesso-view", "empresa-view", "shell"];
 const mostrar = (id) => VISOES.forEach((v) => $(v).classList.toggle("oculto", v !== id));
@@ -19,6 +25,7 @@ iniciarArquivados();
 iniciarDashboard();
 iniciarUsuarios();
 iniciarAnalista();
+iniciarLogs();
 
 // ---------- login ----------
 $("login-form").addEventListener("submit", async (e) => {
@@ -57,6 +64,7 @@ onAuthStateChanged(auth, async (user) => {
   $("usuario-papel").textContent = rotuloPapel(perfil.papel);
   $("avatar").textContent = nome.trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join("").toUpperCase();
   $("menu-config").classList.toggle("oculto", !ehAdmin());
+  $("menu-logs").classList.toggle("oculto", !ehAdmin());
 
   const permitidas = empresasPermitidas();
   if (!permitidas.length) return semAcesso(user, "Seu usuário não tem nenhuma empresa liberada.");
@@ -90,6 +98,7 @@ async function entrarNaEmpresa(emp) {
   estado.empresa = emp;
   estado.notas = [];
   estado.sessao.clear();
+  estado.competenciasCarregadas = new Set();
   $("busca-global").value = "";
   try { localStorage.setItem("ultimaEmpresa", emp.id); } catch (_) { /* ignora */ }
   $("marca-empresa").textContent = emp.nome;
@@ -98,7 +107,11 @@ async function entrarNaEmpresa(emp) {
   mostrar("shell");
   irPara("conferencia");
   try {
-    const snap = await getDocs(query(colEmpresa("notas"), orderBy("criadoEm", "desc")));
+    // Carrega só os últimos meses por padrão (evita ler a coleção inteira a cada login/troca
+    // de empresa, o que cresceria sem parar e pode estourar a cota gratuita do Firestore).
+    // Um mês mais antigo é buscado sob demanda em Arquivados ("Buscar mês antigo").
+    const corte = dataCorte(MESES_HISTORICO_AUTOMATICO);
+    const snap = await getDocs(query(colEmpresa("notas"), where("dataEmissao", ">=", corte), orderBy("dataEmissao", "desc")));
     estado.notas = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
   } catch (err) {
     alert("Não foi possível carregar as notas: " + err.message);
@@ -108,7 +121,7 @@ async function entrarNaEmpresa(emp) {
 
 // ---------- navegação ----------
 let telaAtual = "conferencia";
-const RENDERS = { conferencia: renderConferencia, arquivados: renderArquivados, dashboard: renderDashboard, analista: renderAnalista, configuracoes: renderUsuarios };
+const RENDERS = { conferencia: renderConferencia, arquivados: renderArquivados, dashboard: renderDashboard, analista: renderAnalista, configuracoes: renderUsuarios, logs: renderLogs };
 
 function renderTelaAtual(zerar = false) { RENDERS[telaAtual](zerar); }
 

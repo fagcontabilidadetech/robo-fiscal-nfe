@@ -9,7 +9,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
   getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc,
-  query, orderBy, serverTimestamp,
+  query, where, orderBy, limit, serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -38,5 +38,5 @@ export {
   auth, db, criarLogin,
   signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail,
   collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc,
-  query, orderBy, serverTimestamp,
+  query, where, orderBy, limit, serverTimestamp,
 };
