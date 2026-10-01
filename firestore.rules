@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function perfilPath() { return /databases/$(database)/documents/usuarios/$(request.auth.uid); }
+    function ativo() {
+      return request.auth != null && exists(perfilPath()) && get(perfilPath()).data.ativo == true;
+    }
+    function ehAdmin() { return ativo() && get(perfilPath()).data.papel == 'admin'; }
+    function temAcesso(emp) {
+      return ativo() && (get(perfilPath()).data.papel == 'admin' || emp in get(perfilPath()).data.empresas);
+    }
+
+    // Cadastro de usuários: cada um lê o próprio perfil; só administrador gerencia.
+    match /usuarios/{uid} {
+      allow get: if request.auth != null && (request.auth.uid == uid || ehAdmin());
+      allow list: if ehAdmin();
+      allow create, update, delete: if ehAdmin();
+    }
+
+    // Dados separados por empresa: empresas/<id-da-empresa>/(notas|xmls|produtos)
+    match /empresas/{emp}/{colecao}/{id} {
+      allow read, create, update: if temAcesso(emp) && colecao in ['notas', 'xmls', 'produtos'];
+      allow delete: if ehAdmin() && colecao in ['notas', 'xmls', 'produtos'];
+    }
+  }
+}
