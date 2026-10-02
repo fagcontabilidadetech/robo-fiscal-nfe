@@ -201,6 +201,7 @@
       <div class="usuario">
         <span class="avatar" id="avatar"></span>
         <div><b id="usuario-nome"></b><small id="usuario-papel"></small></div>
+        <button class="sec" id="btn-minha-senha">Alterar senha</button>
         <button class="sec" data-sair>Sair</button>
       </div>
     </header>
@@ -336,6 +337,17 @@
     <label><input type="checkbox" id="u-ativo" checked> Usuário ativo</label>
     <p id="u-erro" class="erro"></p>
     <div class="dlg-botoes"><button type="button" id="u-cancelar" class="sec">Cancelar</button><button type="submit" id="u-salvar">Salvar</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg-senha">
+  <form id="form-senha">
+    <h3>Alterar minha senha</h3>
+    <label class="campo">Nova senha (mín. 6 caracteres)<input type="password" id="senha-nova" autocomplete="new-password" required minlength="6" /></label>
+    <label class="campo">Confirmar nova senha<input type="password" id="senha-confirmar" autocomplete="new-password" required minlength="6" /></label>
+    <p id="senha-erro" class="erro"></p>
+    <p id="senha-sucesso" class="nota-ajuda" style="color:#059669"></p>
+    <div class="dlg-botoes"><button type="button" id="senha-cancelar" class="sec">Cancelar</button><button type="submit" id="senha-salvar">Salvar nova senha</button></div>
   </form>
 </dialog>
 
