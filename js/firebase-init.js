@@ -5,7 +5,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import {
   getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
-  createUserWithEmailAndPassword, sendPasswordResetEmail,
+  createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
   getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc,
@@ -36,7 +36,7 @@ async function criarLogin(email, senha) {
 
 export {
   auth, db, criarLogin,
-  signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail,
+  signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, updatePassword,
   collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc,
   query, where, orderBy, limit, serverTimestamp,
 };

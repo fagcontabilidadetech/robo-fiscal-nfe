@@ -10,6 +10,7 @@ import { iniciarDashboard, renderDashboard } from "./dashboard.js";
 import { iniciarUsuarios, renderUsuarios } from "./usuarios.js";
 import { iniciarAnalista, renderAnalista } from "./analista.js";
 import { iniciarLogs, renderLogs } from "./logs.js";
+import { iniciarPerfil } from "./perfil.js";
 
 // Meses de histórico carregados automaticamente ao entrar na empresa. Período mais antigo
 // que isso só é buscado do banco quando a pessoa pede (ver "Buscar mês antigo" em Arquivados),
@@ -26,6 +27,7 @@ iniciarDashboard();
 iniciarUsuarios();
 iniciarAnalista();
 iniciarLogs();
+iniciarPerfil();
 
 // ---------- login ----------
 $("login-form").addEventListener("submit", async (e) => {
